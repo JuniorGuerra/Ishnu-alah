@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"io"
 )
 
 // Protocol16Type representa los tipos de datos en el protocolo.
 var Protocol16Type = map[string]byte{
 	"Unknown":           0,
 	"Null":              42,
-	"Byte":              68,
+	"Byte":              68, //68
 	"Boolean":           97,
 	"Short":             98,
 	"Integer":           100,
@@ -32,6 +34,7 @@ var Protocol16Type = map[string]byte{
 
 // Deserialize deserializa los datos de entrada según el tipo de código.
 func Deserialize(input *bytes.Buffer, typeCode byte) (interface{}, error) {
+
 	switch typeCode {
 	case Protocol16Type["Unknown"], Protocol16Type["Null"]:
 		return nil, nil
@@ -72,6 +75,7 @@ func Deserialize(input *bytes.Buffer, typeCode byte) (interface{}, error) {
 	case Protocol16Type["ObjectArray"]:
 		return DeserializeObjectArray(input)
 	default:
+		// fmt.Println("el codigo: ' ", typeCode, " ' no se encuentra")
 		return nil, errors.New("type code not implemented")
 	}
 }
@@ -301,10 +305,6 @@ func DeserializeDictionaryElements(input *bytes.Buffer, dictionarySize int, keyT
 	return output, nil
 }
 
-// Aquí deberías implementar las funciones DeserializeOperationRequest, DeserializeOperationResponse,
-// DeserializeEventData y DeserializeParameterTable de manera similar, utilizando las funciones de deserialización
-// que ya has definido para los tipos de datos específicos.
-
 // DeserializeOperationRequest deserializa una solicitud de operación desde un buffer de bytes.
 func DeserializeOperationRequest(input *bytes.Buffer) (map[string]interface{}, error) {
 	operationCode, err := DeserializeByte(input)
@@ -357,11 +357,39 @@ func DeserializeOperationResponse(input *bytes.Buffer) (map[string]interface{}, 
 func DeserializeEventData(input *bytes.Buffer) (map[string]interface{}, error) {
 	code, err := DeserializeByte(input)
 	if err != nil {
+
 		return nil, err
 	}
+
 	parameters, err := DeserializeParameterTable(input)
 	if err != nil {
 		return nil, err
+	}
+
+	if code == 3 {
+		byteArray, ok := parameters[1].([]byte)
+		if !ok {
+			return nil, fmt.Errorf("no se encontro parametro")
+		}
+		reader := bytes.NewReader(byteArray)
+		reader.Seek(9, io.SeekStart)
+		var position0 float64
+
+		err = binary.Read(reader, binary.LittleEndian, &position0)
+
+		if err != nil {
+			return nil, err
+		}
+
+		var position1 float64
+
+		err = binary.Read(reader, binary.LittleEndian, &position1)
+		if err != nil {
+			return nil, err
+		}
+		parameters[4] = position0
+		parameters[5] = position1
+		parameters[252] = byte(3)
 	}
 
 	// Aquí deberías agregar la lógica específica para manejar el código 3 y modificar los parámetros como en tu función de JavaScript.
@@ -379,6 +407,7 @@ func DeserializeParameterTable(input *bytes.Buffer) (map[byte]interface{}, error
 	if err != nil {
 		return nil, err
 	}
+
 	table := make(map[byte]interface{})
 
 	for i := 0; i < int(tableSize); i++ {
@@ -386,14 +415,18 @@ func DeserializeParameterTable(input *bytes.Buffer) (map[byte]interface{}, error
 		if err != nil {
 			return nil, err
 		}
+
 		valueTypeCode, err := DeserializeByte(input)
 		if err != nil {
 			return nil, err
 		}
+
 		value, err := Deserialize(input, valueTypeCode)
 		if err != nil {
+
 			return nil, err
 		}
+
 		table[key] = value
 	}
 

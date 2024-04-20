@@ -37,10 +37,16 @@ func main() {
 }
 
 func handlePayload(payload []byte) {
+
 	packetPharser := models.NewPacketParser()
 
 	go func() {
-
+		for packet := range packetPharser.PacketChan {
+			// fmt.Println("canal del packete", packet)
+			if packet != nil {
+				continue
+			}
+		}
 	}()
 
 	packetPharser.Handle(payload)

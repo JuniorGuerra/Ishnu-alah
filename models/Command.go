@@ -27,6 +27,7 @@ func NewCommand(payload *bytes.Buffer) *Command {
 
 func (c *Command) parseCommand() {
 	c.parseCommandHeader()
+
 	switch c.commandType {
 	case 7:
 		c.payload.Next(4)
@@ -58,7 +59,8 @@ func (c *Command) ParseReliableCommand() error {
 	}
 	c.messageType = messageType
 
-	newPayload := bytes.NewBuffer(c.payload.Bytes()[2:])
+	// newPayload := bytes.NewBuffer(c.payload.Bytes()[2:])
+	newPayload := bytes.NewBuffer(c.payload.Bytes()[:len(c.payload.Bytes())-2])
 
 	switch c.messageType {
 	case 2:
@@ -78,18 +80,21 @@ func (c *Command) ParseReliableCommand() error {
 
 		c.parent.Emit("response", data)
 	case 4:
+
 		data, err := DeserializeEventData(newPayload)
 		if err != nil {
+
 			return err
+
 		}
 		c.data = data
-
 		c.parent.Emit("event", data)
 	}
 
 	return nil
 }
 
-func (p *PacketParser) Emit(eventType string, data interface{}) {
-
+func (p *PacketParser) Emit(eventType string, data map[string]interface{}) {
+	// fmt.Println("Muchos de los eventos no se encuentran")
+	// fmt.Println(eventType, data)
 }

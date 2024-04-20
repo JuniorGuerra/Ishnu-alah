@@ -20,6 +20,7 @@ func NewPacket(buff []byte) *Packet {
 	packet := &Packet{
 		payload: bytes.NewBuffer(buff),
 	}
+
 	packet.parsePacket()
 	return packet
 }
@@ -30,6 +31,7 @@ func (p *Packet) parsePhotonHeader() {
 	binary.Read(p.payload, binary.BigEndian, &p.commandCount)
 	binary.Read(p.payload, binary.BigEndian, &p.timestamp)
 	binary.Read(p.payload, binary.BigEndian, &p.challenge)
+
 }
 
 func (p *Packet) parsePacket() {
@@ -38,4 +40,5 @@ func (p *Packet) parsePacket() {
 		command := NewCommand(p.payload)
 		p.commands = append(p.commands, command)
 	}
+
 }
