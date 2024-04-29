@@ -6,10 +6,12 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"fmt"
 )
 
 const (
-	device = `\Device\NPF_{3B4C1643-F01E-4542-9FC8-CE8A27A755D2}`
+	//	device = `\Device\NPF_{3B4C1643-F01E-4542-9FC8-CE8A27A755D2}`
+	device = "wlo1"
 	filter = "udp and (dst port 5056 or src port 5056)"
 )
 
@@ -24,7 +26,6 @@ func main() {
 	if err := handle.SetBPFFilter(filter); err != nil {
 		panic(err)
 	}
-
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	for packet := range packetSource.Packets() {
