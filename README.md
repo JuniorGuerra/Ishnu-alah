@@ -1,6 +1,3 @@
-Aquí tienes una versión en inglés, presentada de manera profesional para incluirla en tu hoja de vida:
-
----
 
 **Project: Isnuh Ala - Network Packet Decoding and Radar Mapping System**
 
